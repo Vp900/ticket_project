@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Ticket = require('../models/Ticket');
 const User = require('../models/User');
+const mongoose = require('mongoose');
 const { auth } = require('../middleware/auth');
 
 // @route   GET api/stats
@@ -31,16 +32,42 @@ router.get('/', auth, async (req, res) => {
             // Admin sees everything
             stats.totalSupervisors = await User.countDocuments({ role: 'Supervisor', isDeleted: false });
             stats.totalAgents = await User.countDocuments({ role: 'Agent', isDeleted: false });
-            stats.levelWiseAgents.active = await User.countDocuments({ role: 'Agent', isDeleted: false, isActive: true });
-            stats.levelWiseAgents.inactive = await User.countDocuments({ role: 'Agent', isDeleted: false, isActive: false });
+
+            const levelCounts = await User.aggregate([
+                { $match: { role: 'Agent', isDeleted: false } },
+                { $group: { _id: '$level', count: { $sum: 1 } } }
+            ]);
+
+            stats.levelWiseAgents = {
+                L1: 0, L2: 0, L3: 0, L4: 0, L5: 0
+            };
+
+            levelCounts.forEach(lc => {
+                if (stats.levelWiseAgents.hasOwnProperty(lc._id)) {
+                    stats.levelWiseAgents[lc._id] = lc.count;
+                }
+            });
         } else if (req.user.role === 'Supervisor') {
             // Supervisor sees their hierarchy
             userQuery.supervisorId = req.user.id;
             ticketQuery.supervisorId = req.user.id;
 
             stats.totalAgents = await User.countDocuments({ role: 'Agent', isDeleted: false, supervisorId: req.user.id });
-            stats.levelWiseAgents.active = await User.countDocuments({ role: 'Agent', isDeleted: false, supervisorId: req.user.id, isActive: true });
-            stats.levelWiseAgents.inactive = await User.countDocuments({ role: 'Agent', isDeleted: false, supervisorId: req.user.id, isActive: false });
+
+            const levelCounts = await User.aggregate([
+                { $match: { role: 'Agent', isDeleted: false, supervisorId: new mongoose.Types.ObjectId(req.user.id) } },
+                { $group: { _id: '$level', count: { $sum: 1 } } }
+            ]);
+
+            stats.levelWiseAgents = {
+                L1: 0, L2: 0, L3: 0, L4: 0, L5: 0
+            };
+
+            levelCounts.forEach(lc => {
+                if (stats.levelWiseAgents.hasOwnProperty(lc._id)) {
+                    stats.levelWiseAgents[lc._id] = lc.count;
+                }
+            });
         } else if (req.user.role === 'Agent') {
             // Agent sees their own tickets
             ticketQuery.$or = [{ createdByAgentId: req.user.id }, { assignedAgentId: req.user.id }];

@@ -63,7 +63,7 @@ export function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
     <aside
       className={cn(
         'fixed left-0 top-0 h-screen bg-sidebar flex flex-col transition-all duration-300 z-50 shadow-lg',
-        collapsed ? 'w-16' : 'w-64'
+        collapsed ? 'w-16 -translate-x-full lg:translate-x-0' : 'w-64 translate-x-0'
       )}
     >
       {/* Header */}

@@ -11,8 +11,11 @@ interface Stats {
   totalSupervisors: number;
   totalAgents: number;
   levelWiseAgents: {
-    active: number;
-    inactive: number;
+    L1: number;
+    L2: number;
+    L3: number;
+    L4: number;
+    L5: number;
   };
   tickets: {
     open: number;
@@ -27,7 +30,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<Stats>({
     totalSupervisors: 0,
     totalAgents: 0,
-    levelWiseAgents: { active: 0, inactive: 0 },
+    levelWiseAgents: { L1: 0, L2: 0, L3: 0, L4: 0, L5: 0 },
     tickets: { open: 0, closed: 0, reopened: 0 },
     chartData: [],
   });
@@ -65,7 +68,7 @@ export default function DashboardPage() {
     <DashboardLayout title={getDashboardTitle()}>
       <div className="space-y-6">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {user?.role === 'Admin' && (
             <StatCard
               title="Total Supervisors"
@@ -81,7 +84,7 @@ export default function DashboardPage() {
               value={stats.totalAgents}
               icon={Users}
               variant="info"
-              subtitle={`Active: ${stats.levelWiseAgents.active} | Inactive: ${stats.levelWiseAgents.inactive}`}
+              subtitle={`L1: ${stats.levelWiseAgents.L1} | L2: ${stats.levelWiseAgents.L2} | L3: ${stats.levelWiseAgents.L3} | L4: ${stats.levelWiseAgents.L4} | L5: ${stats.levelWiseAgents.L5}`}
             />
           )}
 

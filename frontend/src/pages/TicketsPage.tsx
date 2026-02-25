@@ -119,24 +119,29 @@ export default function TicketsPage() {
       toast.error('Title is required');
       return;
     }
+    if (!formDescription.trim()) {
+      toast.error('Description is required');
+      return;
+    }
+    if (!formMobile.trim()) {
+      toast.error('Mobile number is required');
+      return;
+    }
 
     setIsSaving(true);
     try {
+      const payload = {
+        title: formTitle,
+        description: formDescription,
+        mobileNumber: formMobile,
+        assignedAgentId: formAssignedAgent === 'none' || !formAssignedAgent ? undefined : formAssignedAgent
+      };
+
       if (isCreateMode) {
-        await api.createTicket({
-          title: formTitle,
-          description: formDescription,
-          mobileNumber: formMobile,
-          assignedAgentId: formAssignedAgent || undefined
-        });
+        await api.createTicket(payload);
         toast.success('Ticket created successfully');
       } else if (editingTicket) {
-        await api.editTicket((editingTicket as any)._id || editingTicket.id, {
-          title: formTitle,
-          description: formDescription,
-          mobileNumber: formMobile,
-          assignedAgentId: formAssignedAgent
-        });
+        await api.editTicket((editingTicket as any)._id || editingTicket.id, payload);
 
         // Also update status if changed
         if (formStatus !== editingTicket.status) {
@@ -147,9 +152,9 @@ export default function TicketsPage() {
 
       setIsDialogOpen(false);
       fetchTickets();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving ticket:', error);
-      toast.error('Failed to save ticket');
+      toast.error(error.message || 'Failed to save ticket');
     } finally {
       setIsSaving(false);
     }
@@ -168,7 +173,7 @@ export default function TicketsPage() {
 
   const handleExportToExcel = () => {
     const csvContent = [
-      ['ID', 'Title', 'Description', 'Status', 'Mobile', 'Created By', 'Assigned To', 'Created At'].join(','),
+      ['ID', 'Title', 'Description', 'Status', 'Mobile', 'Created By', 'Assigned To', 'Assigned Level', 'Created At'].join(','),
       ...tickets.map((t) =>
         [
           (t as any)._id || t.id,
@@ -178,6 +183,7 @@ export default function TicketsPage() {
           t.mobileNumber || '',
           (t.createdByAgentId as any)?.name || 'Unknown',
           (t.assignedAgentId as any)?.name || 'Unassigned',
+          (t.assignedAgentId as any)?.level || 'N/A',
           format(new Date(t.createdAt), 'yyyy-MM-dd HH:mm'),
         ].join(',')
       ),
@@ -222,7 +228,7 @@ export default function TicketsPage() {
         </CardHeader>
         <CardContent>
           {/* Advanced Search Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -353,7 +359,7 @@ export default function TicketsPage() {
 
       {/* Create/Edit Ticket Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isCreateMode ? 'Create Ticket' : 'Edit Ticket'}</DialogTitle>
             <DialogDescription>
@@ -412,7 +418,7 @@ export default function TicketsPage() {
                     <SelectValue placeholder="Select Agent" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Leave Unassigned</SelectItem>
+                    <SelectItem value="none">Leave Unassigned</SelectItem>
                     {agents.map((agent) => (
                       <SelectItem key={(agent as any)._id || agent.id} value={(agent as any)._id || agent.id}>
                         {agent.name}

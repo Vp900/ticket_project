@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface SidebarContextType {
   collapsed: boolean;
@@ -52,14 +53,16 @@ export function DashboardLayout({
 
   return (
     <SidebarContext.Provider value={{ collapsed, setCollapsed }}>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex">
         <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
         <div
-          className="min-h-screen transition-all duration-300"
-          style={{ marginLeft: collapsed ? '64px' : '256px' }}
+          className={cn(
+            "flex-1 min-h-screen transition-all duration-300",
+            collapsed ? "ml-16" : "ml-0 lg:ml-64"
+          )}
         >
           <Header title={title} />
-          <main className="p-6 animate-fade-in">{children}</main>
+          <main className="p-4 sm:p-6 animate-fade-in">{children}</main>
         </div>
       </div>
     </SidebarContext.Provider>

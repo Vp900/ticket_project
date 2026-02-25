@@ -1,7 +1,8 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { Bell, Search } from 'lucide-react';
+import { Bell, Search, Menu } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useSidebar } from './DashboardLayout';
 
 interface HeaderProps {
   title: string;
@@ -9,12 +10,23 @@ interface HeaderProps {
 
 export function Header({ title }: HeaderProps) {
   const { user } = useAuth();
+  const { collapsed, setCollapsed } = useSidebar();
 
   return (
-    <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6">
-      <h1 className="text-xl font-heading font-semibold text-foreground">
-        {title}
-      </h1>
+    <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 sm:px-6">
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden"
+          onClick={() => setCollapsed(!collapsed)}
+        >
+          <Menu className="w-5 h-5" />
+        </Button>
+        <h1 className="text-lg sm:text-xl font-heading font-semibold text-foreground truncate max-w-[150px] sm:max-w-none">
+          {title}
+        </h1>
+      </div>
 
       <div className="flex items-center gap-4">
         <div className="relative hidden md:block">

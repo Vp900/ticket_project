@@ -8,6 +8,7 @@ export interface AppUser {
   email: string;
   mobileNumber: string;
   role: UserRole;
+  level: string;
   supervisorId?: string | AppUser | null;
   isActive: boolean;
   isDeleted: boolean;

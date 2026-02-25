@@ -29,6 +29,11 @@ const userSchema = new mongoose.Schema({
         enum: ['Admin', 'Supervisor', 'Agent'],
         default: 'Agent'
     },
+    level: {
+        type: String,
+        enum: ['L1', 'L2', 'L3', 'L4', 'L5'],
+        default: 'L1'
+    },
     supervisorId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

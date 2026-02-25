@@ -53,6 +53,7 @@ export default function UsersPage() {
   const [formRole, setFormRole] = useState<'Admin' | 'Supervisor' | 'Agent'>('Agent');
   const [formSupervisorId, setFormSupervisorId] = useState<string>('');
   const [formIsActive, setFormIsActive] = useState(true);
+  const [formLevel, setFormLevel] = useState('L1');
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -90,6 +91,7 @@ export default function UsersPage() {
     setFormRole(user.role);
     setFormSupervisorId(typeof user.supervisorId === 'string' ? user.supervisorId : (user.supervisorId as any)?._id || '');
     setFormIsActive(user.isActive);
+    setFormLevel(user.level || 'L1');
     setIsDialogOpen(true);
   };
 
@@ -102,6 +104,7 @@ export default function UsersPage() {
     setFormRole('Agent');
     setFormSupervisorId('');
     setFormIsActive(true);
+    setFormLevel('L1');
   };
 
   const handleSaveUser = async () => {
@@ -112,24 +115,23 @@ export default function UsersPage() {
 
     setIsSaving(true);
     try {
+      const payload = {
+        name: formName,
+        email: formEmail,
+        mobileNumber: formMobile,
+        role: formRole,
+        supervisorId: formSupervisorId === 'none' || !formSupervisorId ? null : formSupervisorId,
+        isActive: formIsActive,
+        level: formLevel
+      };
+
       if (isEditMode && editingUser) {
-        await api.updateUser((editingUser as any)._id || editingUser.id, {
-          name: formName,
-          email: formEmail,
-          mobileNumber: formMobile,
-          role: formRole,
-          supervisorId: formSupervisorId || null,
-          isActive: formIsActive
-        });
+        await api.updateUser((editingUser as any)._id || editingUser.id, payload);
         toast.success('User updated successfully');
       } else {
         await api.register({
-          name: formName,
-          email: formEmail,
-          mobileNumber: formMobile,
-          password: formPassword,
-          role: formRole,
-          supervisorId: formSupervisorId || null
+          ...payload,
+          password: formPassword
         });
         toast.success('User registered successfully');
       }
@@ -205,6 +207,7 @@ export default function UsersPage() {
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Level</TableHead>
                     <TableHead>Supervisor</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -226,6 +229,9 @@ export default function UsersPage() {
                           <Badge variant={getRoleBadgeVariant(user.role)} className="capitalize">
                             {user.role}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{user.level || 'L1'}</Badge>
                         </TableCell>
                         <TableCell>
                           {typeof user.supervisorId === 'object' ? (user.supervisorId as any)?.name : '-'}
@@ -266,7 +272,7 @@ export default function UsersPage() {
 
       {/* Add/Edit User Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isEditMode ? 'Edit User' : 'Add New User'}</DialogTitle>
             <DialogDescription>
@@ -336,7 +342,7 @@ export default function UsersPage() {
                     <SelectValue placeholder="Select a supervisor" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Supervisor</SelectItem>
+                    <SelectItem value="none">No Supervisor</SelectItem>
                     {supervisors.map((sup) => (
                       <SelectItem key={(sup as any)._id || sup.id} value={(sup as any)._id || sup.id}>
                         {sup.name}
@@ -346,6 +352,21 @@ export default function UsersPage() {
                 </Select>
               </div>
             )}
+            <div className="space-y-2">
+              <Label htmlFor="user-level">Level</Label>
+              <Select value={formLevel} onValueChange={setFormLevel}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="L1">L1</SelectItem>
+                  <SelectItem value="L2">L2</SelectItem>
+                  <SelectItem value="L3">L3</SelectItem>
+                  <SelectItem value="L4">L4</SelectItem>
+                  <SelectItem value="L5">L5</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             {isEditMode && (
               <div className="flex items-center gap-2 pt-2">
                 <input

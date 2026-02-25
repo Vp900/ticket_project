@@ -9,10 +9,17 @@ const { auth } = require('../middleware/auth');
 // @access  Private (Agent/Admin)
 router.post('/', auth, async (req, res) => {
     try {
+        console.log('Ticket Creation Request Body:', req.body);
         const { title, description, mobileNumber, assignedAgentId } = req.body;
 
         // Find current user profile for supervisor info
         const currentUser = await User.findById(req.user.id);
+
+        // Determine supervisorId based on role
+        let supervisorIdToSet = currentUser.supervisorId || null;
+        if (req.user.role === 'Supervisor') {
+            supervisorIdToSet = req.user.id;
+        }
 
         const newTicket = new Ticket({
             title,
@@ -20,12 +27,16 @@ router.post('/', auth, async (req, res) => {
             mobileNumber,
             createdByAgentId: req.user.id,
             assignedAgentId: assignedAgentId || req.user.id,
-            supervisorId: currentUser.supervisorId || null
+            supervisorId: supervisorIdToSet
         });
 
         const ticket = await newTicket.save();
         res.status(201).json(ticket);
     } catch (err) {
+        console.error('SERVER ERROR IN POST /api/tickets:', err);
+        if (err.name === 'ValidationError') {
+            return res.status(400).json({ message: 'Validation Error', errors: err.errors });
+        }
         res.status(500).json({ message: 'Server error', error: err.message });
     }
 });

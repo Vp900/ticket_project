@@ -10,7 +10,7 @@ const { auth, checkRole } = require('../middleware/auth');
 // @access  Private (Admin only)
 router.post('/register', [auth, checkRole(['Admin'])], async (req, res) => {
     try {
-        const { name, email, mobileNumber, password, role, supervisorId } = req.body;
+        const { name, email, mobileNumber, password, role, supervisorId, level } = req.body;
 
         let user = await User.findOne({ email });
         if (user) {
@@ -26,7 +26,8 @@ router.post('/register', [auth, checkRole(['Admin'])], async (req, res) => {
             mobileNumber,
             password: hashedPassword,
             role,
-            supervisorId: supervisorId || null
+            supervisorId: supervisorId || null,
+            level: level || 'L1'
         });
 
         await user.save();
@@ -130,7 +131,7 @@ router.get('/', auth, async (req, res) => {
 // @access  Private (Admin)
 router.put('/:id', [auth, checkRole(['Admin'])], async (req, res) => {
     try {
-        const { name, email, mobileNumber, role, supervisorId, isActive } = req.body;
+        const { name, email, mobileNumber, role, supervisorId, isActive, level } = req.body;
 
         const userFields = {};
         if (name) userFields.name = name;
@@ -139,6 +140,7 @@ router.put('/:id', [auth, checkRole(['Admin'])], async (req, res) => {
         if (role) userFields.role = role;
         if (supervisorId !== undefined) userFields.supervisorId = supervisorId || null;
         if (isActive !== undefined) userFields.isActive = isActive;
+        if (level) userFields.level = level;
 
         let user = await User.findById(req.params.id);
         if (!user) return res.status(404).json({ message: 'User not found' });
